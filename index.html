@@ -1,0 +1,1200 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>货代信息查询系统 - 鞋垫工厂</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700;900&display=swap');
+
+  :root {
+    --bg: #0a0a0f;
+    --surface: rgba(255,255,255,0.04);
+    --surface-hover: rgba(255,255,255,0.08);
+    --glass: rgba(255,255,255,0.06);
+    --glass-border: rgba(255,255,255,0.1);
+    --text: #e0e0e0;
+    --text-secondary: #888;
+    --accent: #00d4ff;
+    --accent2: #7c5ce7;
+    --danger: #ff4757;
+    --success: #2ed573;
+    --warning: #ffa502;
+    --card-bg: rgba(20,22,30,0.85);
+    --card-border: rgba(255,255,255,0.08);
+    --input-bg: rgba(255,255,255,0.05);
+    --shadow-3d: 0 8px 32px rgba(0,0,0,0.4);
+  }
+
+  * { margin:0; padding:0; box-sizing:border-box; }
+
+  body {
+    font-family: 'Noto Sans SC', -apple-system, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height:100vh;
+    overflow-x:hidden;
+    -webkit-font-smoothing:antialiased;
+  }
+
+  /* 粒子背景 */
+  #particles {
+    position:fixed; top:0; left:0; width:100%; height:100%;
+    pointer-events:none; z-index:0;
+  }
+
+  /* 头部 */
+  .header {
+    position:sticky; top:0; z-index:100;
+    background:rgba(10,10,15,0.85);
+    backdrop-filter:blur(20px);
+    border-bottom:1px solid var(--glass-border);
+    padding:16px 32px;
+    display:flex; align-items:center; gap:24px;
+    flex-wrap:wrap;
+  }
+
+  .header .logo-area {
+    display:flex; align-items:center; gap:12px;
+    min-width:fit-content;
+  }
+
+  .header .logo-icon {
+    width:44px; height:44px; border-radius:12px;
+    background:linear-gradient(135deg, var(--accent), var(--accent2));
+    display:flex; align-items:center; justify-content:center;
+    font-size:22px; font-weight:900; color:white;
+    box-shadow:0 0 24px rgba(0,212,255,0.3);
+  }
+
+  .header h1 {
+    font-size:20px; font-weight:700;
+    background:linear-gradient(135deg, var(--accent), #fff);
+    -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+  }
+
+  /* 搜索框 */
+  .search-box {
+    flex:1; position:relative; min-width:240px; max-width:420px;
+  }
+
+  .search-box input {
+    width:100%; padding:10px 44px 10px 16px;
+    background:var(--input-bg); border:1px solid var(--glass-border);
+    border-radius:12px; color:var(--text); font-size:14px;
+    transition:all .3s; outline:none;
+  }
+
+  .search-box input:focus {
+    border-color:var(--accent); box-shadow:0 0 16px rgba(0,212,255,0.2);
+  }
+
+  .search-box .search-icon {
+    position:absolute; right:14px; top:50%; transform:translateY(-50%);
+    color:var(--text-secondary); font-size:16px; pointer-events:none;
+  }
+
+  /* 统计 */
+  .header-stats {
+    display:flex; align-items:center; gap:8px;
+    background:var(--surface); padding:8px 16px;
+    border-radius:10px; font-size:13px; color:var(--text-secondary);
+    border:1px solid var(--glass-border);
+  }
+
+  .header-stats span {
+    color:var(--accent); font-weight:700; font-size:18px;
+  }
+
+  /* 主体布局 */
+  .main-container {
+    position:relative; z-index:1;
+    display:flex; gap:0; padding:24px 32px;
+    max-width:1440px; margin:0 auto;
+  }
+
+  /* 筛选侧栏 */
+  .sidebar {
+    width:220px; flex-shrink:0;
+    position:sticky; top:110px; align-self:flex-start;
+    max-height:calc(100vh - 140px); overflow-y:auto;
+    padding-right:24px;
+  }
+
+  .sidebar::-webkit-scrollbar { width:4px; }
+  .sidebar::-webkit-scrollbar-thumb { background:rgba(255,255,255,0.1); border-radius:4px; }
+
+  .filter-group { margin-bottom:20px; }
+  .filter-group h3 {
+    font-size:11px; text-transform:uppercase; letter-spacing:1px;
+    color:var(--text-secondary); margin-bottom:10px; font-weight:500;
+  }
+
+  .filter-tag {
+    display:inline-block; padding:6px 12px; margin:3px 4px;
+    border-radius:8px; font-size:12px; cursor:pointer;
+    background:var(--surface); border:1px solid var(--glass-border);
+    color:var(--text-secondary); transition:all .25s;
+    user-select:none;
+  }
+
+  .filter-tag:hover {
+    background:var(--surface-hover); color:var(--text);
+  }
+
+  .filter-tag.active {
+    background:rgba(0,212,255,0.15); border-color:var(--accent);
+    color:var(--accent); box-shadow:0 0 12px rgba(0,212,255,0.2);
+  }
+
+  .filter-clear {
+    display:block; margin-top:12px; padding:8px;
+    background:none; border:1px dashed var(--glass-border);
+    border-radius:8px; color:var(--text-secondary); font-size:12px;
+    cursor:pointer; width:100%; transition:all .25s;
+  }
+
+  .filter-clear:hover { border-color:var(--danger); color:var(--danger); }
+
+  /* 卡片网格 */
+  .card-grid {
+    flex:1; display:grid;
+    grid-template-columns:repeat(auto-fill, minmax(320px, 1fr));
+    gap:20px; align-content:start;
+  }
+
+  /* 3D卡片 */
+  .card-container {
+    perspective:1200px;
+    height:340px;
+  }
+
+  .card {
+    position:relative; width:100%; height:100%;
+    transform-style:preserve-3d;
+    transition:transform .6s cubic-bezier(.4,0,.2,1);
+    cursor:pointer;
+  }
+
+  .card.flipped { transform:rotateY(180deg); }
+
+  .card-face {
+    position:absolute; inset:0;
+    backface-visibility:hidden;
+    border-radius:20px;
+    background:var(--card-bg);
+    border:1px solid var(--card-border);
+    backdrop-filter:blur(10px);
+    overflow:hidden;
+    box-shadow:var(--shadow-3d);
+    display:flex; flex-direction:column;
+  }
+
+  /* 正面 */
+  .card-front { padding:24px; }
+
+  /* 光泽覆盖层 */
+  .card-gloss {
+    position:absolute; inset:0; border-radius:20px; pointer-events:none;
+    background:radial-gradient(circle at var(--mx) var(--my), rgba(255,255,255,0.12) 0%, transparent 60%);
+    transition:opacity .3s;
+    opacity:0;
+    z-index:1;
+  }
+
+  .card-container:hover .card-gloss { opacity:1; }
+
+  .card-front .card-header {
+    display:flex; justify-content:space-between; align-items:flex-start;
+    margin-bottom:16px;
+  }
+
+  .card-front .company-name {
+    font-size:18px; font-weight:700; color:#fff;
+    line-height:1.3;
+  }
+
+  .card-front .card-actions {
+    display:flex; gap:6px; flex-shrink:0;
+    position:relative; z-index:5;
+  }
+
+  .btn-icon {
+    width:32px; height:32px; border-radius:8px;
+    border:1px solid var(--glass-border); background:var(--surface);
+    color:var(--text-secondary); cursor:pointer;
+    display:flex; align-items:center; justify-content:center;
+    font-size:13px; transition:all .25s;
+  }
+
+  .btn-icon:hover { background:var(--surface-hover); color:#fff; }
+  .btn-icon.del:hover { background:rgba(255,71,87,0.2); border-color:var(--danger); color:var(--danger); }
+
+  .card-front .contact-person {
+    color:var(--text-secondary); font-size:13px; margin-bottom:14px;
+  }
+
+  .tag-row {
+    display:flex; flex-wrap:wrap; gap:6px; margin-bottom:10px;
+  }
+
+  .tag {
+    padding:4px 10px; border-radius:6px; font-size:11px; font-weight:500;
+    border:1px solid transparent;
+  }
+
+  .tag-country {
+    background:rgba(124,92,231,0.2); border-color:rgba(124,92,231,0.3);
+    color:#9b87f5;
+  }
+
+  .tag-transport {
+    background:rgba(0,212,255,0.15); border-color:rgba(0,212,255,0.25);
+    color:var(--accent);
+  }
+
+  .tag-service {
+    background:rgba(255,165,2,0.15); border-color:rgba(255,165,2,0.25);
+    color:var(--warning);
+  }
+
+  .card-front .flip-hint {
+    margin-top:auto; font-size:11px; color:var(--text-secondary);
+    display:flex; align-items:center; gap:4px; opacity:0.6;
+  }
+
+  /* 背面 */
+  .card-back {
+    transform:rotateY(180deg);
+    padding:24px; background:var(--card-bg);
+  }
+
+  .card-back .info-row {
+    display:flex; align-items:center; gap:10px;
+    padding:10px 0; border-bottom:1px solid rgba(255,255,255,0.05);
+    font-size:13px;
+  }
+
+  .card-back .info-label {
+    color:var(--text-secondary); min-width:50px; font-size:12px;
+  }
+
+  .card-back .info-value { color:#ddd; word-break:break-all; }
+
+  .card-back .qrcode-area {
+    margin-top:12px; text-align:center;
+  }
+
+  .card-back .qrcode-area img {
+    max-width:120px; max-height:120px; border-radius:10px;
+    border:1px solid var(--glass-border);
+  }
+
+  .card-back .notes-area {
+    margin-top:10px; padding:10px; background:rgba(255,255,255,0.03);
+    border-radius:8px; font-size:12px; color:var(--text-secondary);
+    line-height:1.6; max-height:70px; overflow-y:auto;
+  }
+
+  /* 翻转遮罩 - 按钮区域 */
+  .card-front .card-actions,
+  .card-back .card-actions-area {
+    position:relative; z-index:10;
+  }
+
+  /* 弹窗 */
+  .modal-overlay {
+    position:fixed; inset:0; z-index:1000;
+    background:rgba(0,0,0,0.6); backdrop-filter:blur(8px);
+    display:flex; align-items:center; justify-content:center;
+    opacity:0; pointer-events:none; transition:opacity .3s;
+  }
+
+  .modal-overlay.show { opacity:1; pointer-events:auto; }
+
+  .modal {
+    background:rgba(22,24,34,0.95);
+    border:1px solid var(--glass-border);
+    border-radius:24px; padding:32px;
+    width:90%; max-width:600px; max-height:85vh;
+    overflow-y:auto;
+    box-shadow:0 24px 80px rgba(0,0,0,0.6);
+    transform:translateY(30px); transition:transform .4s cubic-bezier(.4,0,.2,1);
+  }
+
+  .modal-overlay.show .modal { transform:translateY(0); }
+
+  .modal h2 {
+    font-size:22px; margin-bottom:24px;
+    background:linear-gradient(135deg, var(--accent), #fff);
+    -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+  }
+
+  .form-group { margin-bottom:16px; }
+
+  .form-group label {
+    display:block; font-size:12px; color:var(--text-secondary);
+    margin-bottom:6px; text-transform:uppercase; letter-spacing:.5px;
+  }
+
+  .form-group input,
+  .form-group textarea,
+  .form-group select {
+    width:100%; padding:10px 14px;
+    background:var(--input-bg); border:1px solid var(--glass-border);
+    border-radius:10px; color:var(--text); font-size:14px;
+    outline:none; transition:all .3s; font-family:inherit;
+  }
+
+  .form-group input:focus,
+  .form-group textarea:focus {
+    border-color:var(--accent); box-shadow:0 0 12px rgba(0,212,255,0.15);
+  }
+
+  .form-group textarea { resize:vertical; min-height:60px; }
+
+  .form-row { display:flex; gap:12px; }
+  .form-row > * { flex:1; }
+
+  /* 标签选择器 */
+  .tag-selector { display:flex; flex-wrap:wrap; gap:6px; }
+
+  .tag-selector .tag-option {
+    padding:6px 14px; border-radius:8px; font-size:12px;
+    cursor:pointer; border:1px solid var(--glass-border);
+    background:var(--surface); color:var(--text-secondary);
+    transition:all .25s; user-select:none;
+  }
+
+  .tag-option:hover { background:var(--surface-hover); }
+
+  .tag-option.selected.country-tag {
+    background:rgba(124,92,231,0.2); border-color:rgba(124,92,231,0.4); color:#9b87f5;
+  }
+
+  .tag-option.selected.transport-tag {
+    background:rgba(0,212,255,0.2); border-color:rgba(0,212,255,0.4); color:var(--accent);
+  }
+
+  .tag-option.selected.service-tag {
+    background:rgba(255,165,2,0.2); border-color:rgba(255,165,2,0.4); color:var(--warning);
+  }
+
+  /* 图片上传 */
+  .upload-zone {
+    border:2px dashed var(--glass-border); border-radius:12px;
+    padding:20px; text-align:center; cursor:pointer;
+    transition:all .3s; color:var(--text-secondary); font-size:13px;
+  }
+
+  .upload-zone:hover {
+    border-color:var(--accent); background:rgba(0,212,255,0.05);
+  }
+
+  .upload-zone.has-image { border-color:var(--success); }
+
+  .upload-zone img { max-width:150px; max-height:150px; border-radius:8px; margin-top:8px; }
+
+  .upload-zone input[type=file] { display:none; }
+
+  /* 按钮 */
+  .btn {
+    padding:10px 24px; border-radius:10px; border:none;
+    font-size:14px; font-weight:600; cursor:pointer;
+    transition:all .3s; font-family:inherit;
+  }
+
+  .btn-primary {
+    background:linear-gradient(135deg, var(--accent), var(--accent2));
+    color:#fff; box-shadow:0 4px 16px rgba(0,212,255,0.3);
+  }
+
+  .btn-primary:hover {
+    transform:translateY(-2px); box-shadow:0 8px 24px rgba(0,212,255,0.4);
+  }
+
+  .btn-secondary {
+    background:var(--surface); border:1px solid var(--glass-border);
+    color:var(--text);
+  }
+
+  .btn-secondary:hover { background:var(--surface-hover); }
+
+  .btn-danger {
+    background:rgba(255,71,87,0.15); border:1px solid rgba(255,71,87,0.3);
+    color:var(--danger);
+  }
+
+  .modal-actions { display:flex; gap:12px; justify-content:flex-end; margin-top:24px; }
+
+  /* 标签管理弹窗 */
+  .tab-btn {
+    padding:8px 16px; border-radius:8px; font-size:13px; cursor:pointer;
+    background:var(--surface); border:1px solid var(--glass-border);
+    color:var(--text-secondary); transition:all .25s; font-family:inherit;
+  }
+  .tab-btn:hover { background:var(--surface-hover); color:var(--text); }
+  .tab-btn.active {
+    background:rgba(0,212,255,0.15); border-color:var(--accent);
+    color:var(--accent); box-shadow:0 0 12px rgba(0,212,255,0.2);
+  }
+
+  .tag-list { display:flex; flex-direction:column; gap:6px; }
+  .tag-list-item {
+    display:flex; align-items:center; justify-content:space-between;
+    padding:8px 12px; border-radius:10px;
+    background:var(--surface); border:1px solid var(--glass-border);
+    transition:all .25s;
+  }
+  .tag-list-item:hover { background:var(--surface-hover); }
+  .tag-list-item .tag-name { font-size:14px; color:var(--text); flex:1; }
+  .tag-list-item .tag-actions { display:flex; gap:4px; flex-shrink:0; }
+  .tag-list-item .tag-actions button {
+    width:28px; height:28px; border-radius:6px; border:1px solid var(--glass-border);
+    background:var(--surface); color:var(--text-secondary); cursor:pointer;
+    font-size:12px; display:flex; align-items:center; justify-content:center;
+    transition:all .25s;
+  }
+  .tag-list-item .tag-actions button:hover { background:var(--surface-hover); color:#fff; }
+  .tag-list-item .tag-actions button.del-btn:hover { background:rgba(255,71,87,0.2); border-color:var(--danger); color:var(--danger); }
+
+  .tag-list-item .edit-row {
+    display:flex; gap:6px; flex:1; align-items:center;
+  }
+  .tag-list-item .edit-row input {
+    flex:1; padding:6px 10px; background:var(--input-bg);
+    border:1px solid var(--glass-border); border-radius:6px;
+    color:var(--text); font-size:13px; outline:none; font-family:inherit;
+  }
+  .tag-list-item .edit-row input:focus { border-color:var(--accent); }
+  .tag-list-item .edit-row button {
+    padding:4px 10px; border-radius:6px; border:1px solid var(--glass-border);
+    font-size:12px; cursor:pointer; font-family:inherit; transition:all .25s;
+  }
+  .tag-list-item .edit-row .save-btn {
+    background:rgba(46,213,115,0.15); border-color:rgba(46,213,115,0.3); color:var(--success);
+  }
+  .tag-list-item .edit-row .save-btn:hover { background:rgba(46,213,115,0.25); }
+  .tag-list-item .edit-row .cancel-btn {
+    background:var(--surface); color:var(--text-secondary);
+  }
+  .tag-list-item .edit-row .cancel-btn:hover { background:var(--surface-hover); color:#fff; }
+
+  /* 浮动添加按钮 */
+  .fab {
+    position:fixed; bottom:32px; right:32px; z-index:200;
+    width:56px; height:56px; border-radius:16px;
+    background:linear-gradient(135deg, var(--accent), var(--accent2));
+    border:none; color:#fff; font-size:28px; cursor:pointer;
+    box-shadow:0 8px 32px rgba(0,212,255,0.4);
+    transition:all .3s; display:flex; align-items:center; justify-content:center;
+  }
+
+  .fab:hover {
+    transform:translateY(-4px); box-shadow:0 12px 40px rgba(0,212,255,0.5);
+  }
+
+  /* 空状态 */
+  .empty-state {
+    grid-column:1/-1; text-align:center; padding:80px 20px;
+    color:var(--text-secondary);
+  }
+
+  .empty-state .empty-icon { font-size:64px; margin-bottom:16px; opacity:0.4; }
+
+  /* 响应式 */
+  @media (max-width:768px) {
+    .main-container { flex-direction:column; padding:16px; }
+    .sidebar { width:100%; position:static; padding-right:0; max-height:none; }
+    .card-grid { grid-template-columns:1fr; }
+    .header { padding:12px 16px; }
+    .form-row { flex-direction:column; }
+  }
+</style>
+</head>
+<body>
+
+<canvas id="particles"></canvas>
+
+<!-- 头部 -->
+<header class="header">
+  <div class="logo-area">
+    <div class="logo-icon">L</div>
+    <h1>货代信息查询系统</h1>
+  </div>
+  <div class="search-box">
+    <input type="text" id="searchInput" placeholder="搜索公司名 / 联系人 / 国家 / 微信号...">
+    <span class="search-icon">⌕</span>
+  </div>
+  <div class="header-stats">
+    共 <span id="totalCount">0</span> 家货代
+  </div>
+</header>
+
+<!-- 主体布局 -->
+<div class="main-container">
+  <!-- 筛选侧栏 -->
+  <aside class="sidebar" id="sidebar">
+    <div class="filter-group">
+      <h3 style="display:flex;justify-content:space-between;align-items:center">
+        国家 / 地区
+        <button class="btn-icon" style="width:24px;height:24px;font-size:12px" onclick="openTagManager('country')" title="管理国家标签">⚙</button>
+      </h3>
+      <div id="countryFilters"></div>
+    </div>
+    <div class="filter-group">
+      <h3 style="display:flex;justify-content:space-between;align-items:center">
+        运输方式
+        <button class="btn-icon" style="width:24px;height:24px;font-size:12px" onclick="openTagManager('transport_mode')" title="管理运输方式标签">⚙</button>
+      </h3>
+      <div id="transportFilters"></div>
+    </div>
+    <div class="filter-group">
+      <h3 style="display:flex;justify-content:space-between;align-items:center">
+        服务类型
+        <button class="btn-icon" style="width:24px;height:24px;font-size:12px" onclick="openTagManager('service_type')" title="管理服务类型标签">⚙</button>
+      </h3>
+      <div id="serviceFilters"></div>
+    </div>
+    <button class="filter-clear" onclick="clearFilters()">清除全部筛选</button>
+  </aside>
+
+  <!-- 卡片区域 -->
+  <div class="card-grid" id="cardGrid"></div>
+</div>
+
+<!-- 浮动添加按钮 -->
+<button class="fab" onclick="openModal()" title="添加货代">+</button>
+
+<!-- 新增/编辑弹窗 -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <h2 id="modalTitle">添加货代公司</h2>
+    <form id="forwarderForm" onsubmit="saveForwarder(event)">
+      <input type="hidden" id="editId">
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>公司名称 *</label>
+          <input type="text" id="companyName" required placeholder="输入公司名称">
+        </div>
+        <div class="form-group">
+          <label>联系人</label>
+          <input type="text" id="contactPerson" placeholder="输入联系人">
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>电话</label>
+          <input type="text" id="phone" placeholder="输入电话号码">
+        </div>
+        <div class="form-group">
+          <label>微信号</label>
+          <input type="text" id="wechat" placeholder="输入微信号">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>专线国家 / 地区（可多选）</label>
+        <div class="tag-selector" id="countrySelector"></div>
+      </div>
+
+      <div class="form-group">
+        <label>运输方式（可多选）</label>
+        <div class="tag-selector" id="transportSelector"></div>
+      </div>
+
+      <div class="form-group">
+        <label>服务类型（可多选）</label>
+        <div class="tag-selector" id="serviceSelector"></div>
+      </div>
+
+      <div class="form-group">
+        <label>微信二维码 / 群组二维码</label>
+        <div class="upload-zone" id="uploadZone" onclick="document.getElementById('fileInput').click()">
+          <div id="uploadPlaceholder">点击上传二维码图片</div>
+          <img id="previewImage" style="display:none">
+          <input type="file" id="fileInput" accept="image/*" onchange="handleFileUpload(event)">
+        </div>
+        <input type="hidden" id="qrcodeImage">
+      </div>
+
+      <div class="form-group">
+        <label>备注</label>
+        <textarea id="notes" placeholder="额外说明信息..."></textarea>
+      </div>
+
+      <div class="modal-actions">
+        <button type="button" class="btn btn-secondary" onclick="closeModal()">取消</button>
+        <button type="submit" class="btn btn-primary" id="submitBtn">保存</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- 标签管理弹窗 -->
+<div class="modal-overlay" id="tagManagerOverlay">
+  <div class="modal" style="max-width:500px">
+    <h2 id="tagManagerTitle">标签管理</h2>
+    
+    <!-- Tab 切换 -->
+    <div class="tab-nav" style="display:flex;gap:8px;margin-bottom:20px;border-bottom:1px solid var(--glass-border);padding-bottom:8px">
+      <button class="tab-btn active" onclick="switchTagTab('country')" data-tab="country">国家/地区</button>
+      <button class="tab-btn" onclick="switchTagTab('transport_mode')" data-tab="transport_mode">运输方式</button>
+      <button class="tab-btn" onclick="switchTagTab('service_type')" data-tab="service_type">服务类型</button>
+    </div>
+    
+    <!-- 标签列表 -->
+    <div id="tagListContainer" style="max-height:300px;overflow-y:auto;margin-bottom:20px">
+      <div id="tagList" class="tag-list"></div>
+    </div>
+    
+    <!-- 新增标签 -->
+    <div class="form-group">
+      <label>新增标签</label>
+      <div style="display:flex;gap:8px">
+        <input type="text" id="newTagInput" placeholder="输入新标签名称" style="flex:1">
+        <button class="btn btn-primary" onclick="addNewTag()">添加</button>
+      </div>
+    </div>
+    
+    <div class="modal-actions">
+      <button type="button" class="btn btn-secondary" onclick="closeTagManager()">关闭</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ===== 粒子背景 =====
+(function(){
+  const canvas = document.getElementById('particles');
+  const ctx = canvas.getContext('2d');
+  let particles = [];
+  const count = 60;
+
+  function resize() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+  }
+  resize();
+  window.addEventListener('resize', resize);
+
+  for(let i=0; i<count; i++) {
+    particles.push({
+      x:Math.random() * canvas.width,
+      y:Math.random() * canvas.height,
+      vx:(Math.random()-.5)*0.6,
+      vy:(Math.random()-.5)*0.6,
+      r:Math.random()*1.5+0.5,
+      a:Math.random()*0.5+0.2
+    });
+  }
+
+  function drawConnection(p1,p2) {
+    const d = Math.hypot(p1.x-p2.x, p1.y-p2.y);
+    if(d < 120) {
+      ctx.strokeStyle = `rgba(0,212,255,${0.08*(1-d/120)})`;
+      ctx.lineWidth = 0.5;
+      ctx.beginPath(); ctx.moveTo(p1.x,p1.y); ctx.lineTo(p2.x,p2.y); ctx.stroke();
+    }
+  }
+
+  function animate() {
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    particles.forEach(p=>{
+      p.x+=p.vx; p.y+=p.vy;
+      if(p.x<0||p.x>canvas.width) p.vx*=-1;
+      if(p.y<0||p.y>canvas.height) p.vy*=-1;
+      ctx.beginPath();
+      ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
+      ctx.fillStyle = `rgba(0,212,255,${p.a})`;
+      ctx.fill();
+    });
+    for(let i=0;i<particles.length;i++)
+      for(let j=i+1;j<particles.length;j++)
+        drawConnection(particles[i],particles[j]);
+    requestAnimationFrame(animate);
+  }
+  animate();
+})();
+
+// ===== 全局状态 =====
+let forwarders = [];
+let filters = { countries:[], transport_modes:[], service_types:[] };
+let searchTerm = '';
+let allTagOptions = { countries:[], transport_modes:[], service_types:[] };
+
+// 标签管理状态
+let tagManagerState = {
+  currentTab: 'country',
+  allTags: [],  // 从 API 获取的所有标签 {id, category, name, sort_order}
+  editingId: null
+};
+
+// ===== API 调用 =====
+const API = '/api';
+
+async function fetchForwarders() {
+  const params = new URLSearchParams();
+  if(searchTerm) params.append('search', searchTerm);
+  filters.countries.forEach(c => params.append('countries[]', c));
+  filters.transport_modes.forEach(t => params.append('transport_modes[]', t));
+  filters.service_types.forEach(s => params.append('service_types[]', s));
+  
+  const res = await fetch(`${API}/forwarders?${params}`);
+  forwarders = await res.json();
+  renderCards();
+  document.getElementById('totalCount').textContent = forwarders.length;
+}
+
+async function fetchFilters() {
+  const res = await fetch(`${API}/filters`);
+  allTagOptions = await res.json();
+  renderSidebarFilters();
+}
+
+// ===== 渲染 =====
+function renderSidebarFilters() {
+  const countryDiv = document.getElementById('countryFilters');
+  const transportDiv = document.getElementById('transportFilters');
+  const serviceDiv = document.getElementById('serviceFilters');
+  
+  countryDiv.innerHTML = allTagOptions.countries.map(c =>
+    `<span class="filter-tag ${filters.countries.includes(c)?'active':''}" onclick="toggleFilter('countries','${c}')">${c}</span>`
+  ).join('');
+  
+  transportDiv.innerHTML = allTagOptions.transport_modes.map(t =>
+    `<span class="filter-tag ${filters.transport_modes.includes(t)?'active':''}" onclick="toggleFilter('transport_modes','${t}')">${t}</span>`
+  ).join('');
+  
+  serviceDiv.innerHTML = allTagOptions.service_types.map(s =>
+    `<span class="filter-tag ${filters.service_types.includes(s)?'active':''}" onclick="toggleFilter('service_types','${s}')">${s}</span>`
+  ).join('');
+}
+
+function toggleFilter(type, value) {
+  const arr = filters[type];
+  const idx = arr.indexOf(value);
+  if(idx > -1) arr.splice(idx,1);
+  else arr.push(value);
+  renderSidebarFilters();
+  fetchForwarders();
+}
+
+function clearFilters() {
+  filters = { countries:[], transport_modes:[], service_types:[] };
+  document.getElementById('searchInput').value = '';
+  searchTerm = '';
+  renderSidebarFilters();
+  fetchForwarders();
+}
+
+function renderCards() {
+  const grid = document.getElementById('cardGrid');
+  
+  if(forwarders.length === 0) {
+    grid.innerHTML = `<div class="empty-state"><div class="empty-icon">📭</div><p>暂无匹配的货代信息</p><p style="color:var(--text-secondary);font-size:13px">尝试调整筛选条件或添加新公司</p></div>`;
+    return;
+  }
+  
+  grid.innerHTML = forwarders.map(f => `
+    <div class="card-container" id="card-container-${f.id}" onmousemove="cardGlow(event, ${f.id})">
+      <div class="card" id="card-${f.id}" onclick="if(!event.target.closest('.btn-icon, .card-actions-area')) toggleFlip(${f.id})">
+        <div class="card-face card-front">
+          <div class="card-gloss" id="gloss-${f.id}"></div>
+          <div class="card-header">
+            <div class="company-name">${esc(f.company_name)}</div>
+            <div class="card-actions" onclick="event.stopPropagation()">
+              <button class="btn-icon" title="编辑" onclick="openModal(${f.id})">✎</button>
+              <button class="btn-icon del" title="删除" onclick="deleteForwarder(${f.id})">✕</button>
+            </div>
+          </div>
+          <div class="contact-person">👤 ${esc(f.contact_person || '未填写')}</div>
+          <div class="tag-row">${(f.countries||[]).map(c=>`<span class="tag tag-country">${c}</span>`).join('')}</div>
+          <div class="tag-row">${(f.transport_modes||[]).map(t=>`<span class="tag tag-transport">${t}</span>`).join('')}</div>
+          <div class="tag-row">${(f.service_types||[]).slice(0,4).map(s=>`<span class="tag tag-service">${s}</span>`).join('')}</div>
+          <div class="flip-hint">↻ 点击卡片查看详情</div>
+        </div>
+        <div class="card-face card-back">
+          <div class="card-actions-area" style="position:absolute;top:16px;right:16px;z-index:10;" onclick="event.stopPropagation()">
+            <button class="btn-icon" title="编辑" onclick="openModal(${f.id})">✎</button>
+            <button class="btn-icon del" title="删除" onclick="deleteForwarder(${f.id})">✕</button>
+          </div>
+          <h3 style="font-size:16px;margin-bottom:12px;color:#fff;">${esc(f.company_name)}</h3>
+          <div class="info-row">
+            <span class="info-label">电话</span>
+            <span class="info-value">${esc(f.phone || '未填写')}</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">微信</span>
+            <span class="info-value">${esc(f.wechat || '未填写')}</span>
+          </div>
+          <div class="qrcode-area">
+            ${f.qrcode_image
+              ? `<img src="${esc(f.qrcode_image)}" alt="二维码" onerror="this.style.display='none'">`
+              : '<span style="font-size:12px;color:var(--text-secondary)">暂无二维码</span>'}
+          </div>
+          ${f.notes ? `<div class="notes-area">${esc(f.notes)}</div>` : ''}
+          <div class="flip-hint" style="margin-top:auto;">↻ 点击卡片返回</div>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function esc(str) {
+  if(!str) return '';
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+// ===== 3D效果 =====
+function cardGlow(e, id) {
+  const container = document.getElementById('card-container-'+id);
+  const gloss = document.getElementById('gloss-'+id);
+  const rect = container.getBoundingClientRect();
+  const x = e.clientX - rect.left;
+  const y = e.clientY - rect.top;
+  const px = (x/rect.width*100).toFixed(1);
+  const py = (y/rect.height*100).toFixed(1);
+  gloss.style.setProperty('--mx', px+'%');
+  gloss.style.setProperty('--my', py+'%');
+  
+  const card = document.getElementById('card-'+id);
+  if(card && !card.classList.contains('flipped')) {
+    const rx = ((y/rect.height)-0.5)*12;
+    const ry = ((x/rect.width)-0.5)*-12;
+    card.style.transform = `rotateX(${rx}deg) rotateY(${ry}deg)`;
+  }
+}
+
+// 鼠标离开时恢复
+document.addEventListener('mouseleave', function(e) {
+  if(e.target.closest('.card-container')) {
+    const card = e.target.closest('.card-container').querySelector('.card');
+    if(card && !card.classList.contains('flipped')) {
+      card.style.transform = 'rotateX(0) rotateY(0)';
+    }
+  }
+}, true);
+
+function toggleFlip(id) {
+  const card = document.getElementById('card-'+id);
+  card.classList.toggle('flipped');
+  if(card.classList.contains('flipped')) {
+    card.style.transform = 'rotateY(180deg)';
+  } else {
+    card.style.transform = 'rotateX(0) rotateY(0)';
+  }
+}
+
+// ===== 弹窗 =====
+let currentUploadUrl = '';
+
+function openModal(id) {
+  document.getElementById('modalOverlay').classList.add('show');
+  document.getElementById('editId').value = '';
+  document.getElementById('modalTitle').textContent = '添加货代公司';
+  document.getElementById('forwarderForm').reset();
+  document.getElementById('previewImage').style.display = 'none';
+  document.getElementById('uploadPlaceholder').style.display = 'block';
+  document.getElementById('uploadZone').classList.remove('has-image');
+  currentUploadUrl = '';
+  document.getElementById('qrcodeImage').value = '';
+  
+  // 渲染标签选择器
+  renderTagSelectors();
+  
+  if(id) {
+    const f = forwarders.find(x => x.id === id);
+    if(f) {
+      document.getElementById('editId').value = f.id;
+      document.getElementById('modalTitle').textContent = '编辑货代公司';
+      document.getElementById('companyName').value = f.company_name||'';
+      document.getElementById('contactPerson').value = f.contact_person||'';
+      document.getElementById('phone').value = f.phone||'';
+      document.getElementById('wechat').value = f.wechat||'';
+      document.getElementById('notes').value = f.notes||'';
+      
+      if(f.qrcode_image) {
+        currentUploadUrl = f.qrcode_image;
+        document.getElementById('qrcodeImage').value = f.qrcode_image;
+        document.getElementById('previewImage').src = f.qrcode_image;
+        document.getElementById('previewImage').style.display = 'block';
+        document.getElementById('uploadPlaceholder').style.display = 'none';
+        document.getElementById('uploadZone').classList.add('has-image');
+      }
+      
+      // 延迟设置标签选择器（等渲染完成）
+      setTimeout(() => {
+        selectTags('country', f.countries||[]);
+        selectTags('transport', f.transport_modes||[]);
+        selectTags('service', f.service_types||[]);
+      }, 50);
+    }
+  }
+}
+
+function closeModal() {
+  document.getElementById('modalOverlay').classList.remove('show');
+}
+
+function renderTagSelectors() {
+  const countrySel = document.getElementById('countrySelector');
+  const transportSel = document.getElementById('transportSelector');
+  const serviceSel = document.getElementById('serviceSelector');
+  
+  countrySel.innerHTML = allTagOptions.countries.map(c =>
+    `<span class="tag-option" data-type="country" data-value="${c}" onclick="toggleTagOption(this)">${c}</span>`
+  ).join('');
+  
+  transportSel.innerHTML = allTagOptions.transport_modes.map(t =>
+    `<span class="tag-option" data-type="transport" data-value="${t}" onclick="toggleTagOption(this)">${t}</span>`
+  ).join('');
+  
+  serviceSel.innerHTML = allTagOptions.service_types.map(s =>
+    `<span class="tag-option" data-type="service" data-value="${s}" onclick="toggleTagOption(this)">${s}</span>`
+  ).join('');
+}
+
+function selectTags(type, values) {
+  const map = { country:'countrySelector', transport:'transportSelector', service:'serviceSelector' };
+  const sel = document.getElementById(map[type]);
+  if(!sel) return;
+  sel.querySelectorAll('.tag-option').forEach(el => {
+    if(values.includes(el.dataset.value)) el.classList.add('selected', type+'-tag');
+  });
+}
+
+function toggleTagOption(el) {
+  const type = el.dataset.type;
+  const cls = type+'-tag';
+  el.classList.toggle('selected');
+  el.classList.toggle(cls);
+}
+
+function getSelectedTags(selectorId) {
+  const sel = document.getElementById(selectorId);
+  return Array.from(sel.querySelectorAll('.selected')).map(el => el.dataset.value);
+}
+
+function handleFileUpload(e) {
+  const file = e.target.files[0];
+  if(!file) return;
+  
+  const formData = new FormData();
+  formData.append('file', file);
+  
+  fetch(`${API}/upload`, { method:'POST', body:formData })
+    .then(r=>r.json())
+    .then(data=>{
+      currentUploadUrl = data.url;
+      document.getElementById('qrcodeImage').value = data.url;
+      document.getElementById('previewImage').src = data.url;
+      document.getElementById('previewImage').style.display = 'block';
+      document.getElementById('uploadPlaceholder').style.display = 'none';
+      document.getElementById('uploadZone').classList.add('has-image');
+    });
+}
+
+async function saveForwarder(e) {
+  e.preventDefault();
+  
+  const id = document.getElementById('editId').value;
+  const data = {
+    company_name:document.getElementById('companyName').value.trim(),
+    contact_person:document.getElementById('contactPerson').value.trim(),
+    phone:document.getElementById('phone').value.trim(),
+    wechat:document.getElementById('wechat').value.trim(),
+    qrcode_image:currentUploadUrl,
+    countries:getSelectedTags('countrySelector'),
+    transport_modes:getSelectedTags('transportSelector'),
+    service_types:getSelectedTags('serviceSelector'),
+    notes:document.getElementById('notes').value.trim()
+  };
+  
+  if(!data.company_name) return;
+  
+  const method = id ? 'PUT' : 'POST';
+  const url = id ? `${API}/forwarders/${id}` : `${API}/forwarders`;
+  
+  await fetch(url, {
+    method,
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify(data)
+  });
+  
+  closeModal();
+  await fetchFilters(); // 刷新筛选选项（可能有新标签）
+  await fetchForwarders();
+}
+
+async function deleteForwarder(id) {
+  if(!confirm('确认删除该货代公司？')) return;
+  await fetch(`${API}/forwarders/${id}`, { method:'DELETE' });
+  await fetchFilters();
+  await fetchForwarders();
+}
+
+// ===== 搜索 =====
+let searchTimeout;
+document.getElementById('searchInput').addEventListener('input', function() {
+  clearTimeout(searchTimeout);
+  searchTimeout = setTimeout(()=>{
+    searchTerm = this.value.trim();
+    fetchForwarders();
+  }, 300);
+});
+
+// ===== 快捷键 =====
+document.addEventListener('keydown', function(e) {
+  if(e.key==='Escape') {
+    if(document.getElementById('tagManagerOverlay').classList.contains('show')) {
+      closeTagManager();
+    } else {
+      closeModal();
+    }
+  }
+  if(e.ctrlKey && e.key==='k') {
+    e.preventDefault();
+    document.getElementById('searchInput').focus();
+  }
+});
+
+// ===== 标签管理功能 =====
+async function fetchTagOptions() {
+  const res = await fetch(`${API}/tag-options`);
+  const data = await res.json();
+  tagManagerState.allTags = data.options || [];
+}
+
+function openTagManager(tab) {
+  tagManagerState.currentTab = tab;
+  tagManagerState.editingId = null;
+  document.getElementById('tagManagerOverlay').classList.add('show');
+  fetchTagOptions().then(() => {
+    switchTagTab(tab);
+  });
+}
+
+function closeTagManager() {
+  document.getElementById('tagManagerOverlay').classList.remove('show');
+  document.getElementById('newTagInput').value = '';
+  tagManagerState.editingId = null;
+  // 刷新侧栏和选择器
+  fetchFilters().then(() => {
+    renderTagSelectors();
+  });
+}
+
+function switchTagTab(tab) {
+  tagManagerState.currentTab = tab;
+  tagManagerState.editingId = null;
+  // 更新 tab 按钮状态
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.tab === tab);
+  });
+  renderTagList();
+}
+
+function renderTagList() {
+  const container = document.getElementById('tagList');
+  const tags = tagManagerState.allTags.filter(t => t.category === tagManagerState.currentTab);
+  
+  if (tags.length === 0) {
+    container.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-secondary);font-size:13px">暂无标签</div>';
+    return;
+  }
+  
+  container.innerHTML = tags.map(t => {
+    if (tagManagerState.editingId === t.id) {
+      return `
+        <div class="tag-list-item">
+          <div class="edit-row">
+            <input type="text" id="editTagInput_${t.id}" value="${esc(t.name)}" placeholder="输入标签名称">
+            <button class="save-btn" onclick="saveEditTag(${t.id})">保存</button>
+            <button class="cancel-btn" onclick="cancelEditTag()">取消</button>
+          </div>
+        </div>`;
+    }
+    return `
+      <div class="tag-list-item">
+        <span class="tag-name">${esc(t.name)}</span>
+        <div class="tag-actions">
+          <button title="编辑" onclick="startEditTag(${t.id})">✎</button>
+          <button class="del-btn" title="删除" onclick="deleteTag(${t.id}, '${esc(t.name)}')">×</button>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function startEditTag(id) {
+  tagManagerState.editingId = id;
+  renderTagList();
+  setTimeout(() => {
+    const input = document.getElementById('editTagInput_' + id);
+    if (input) { input.focus(); input.select(); }
+  }, 50);
+}
+
+function cancelEditTag() {
+  tagManagerState.editingId = null;
+  renderTagList();
+}
+
+async function saveEditTag(id) {
+  const input = document.getElementById('editTagInput_' + id);
+  if (!input) return;
+  const newName = input.value.trim();
+  if (!newName) return;
+  
+  await fetch(`${API}/tag-options/${id}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ name: newName })
+  });
+  
+  tagManagerState.editingId = null;
+  await fetchTagOptions();
+  renderTagList();
+}
+
+async function addNewTag() {
+  const input = document.getElementById('newTagInput');
+  const name = input.value.trim();
+  if (!name) return;
+  
+  const res = await fetch(`${API}/tag-options`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ category: tagManagerState.currentTab, name: name })
+  });
+  
+  if (res.status === 409) {
+    alert('该标签已存在');
+    return;
+  }
+  
+  input.value = '';
+  await fetchTagOptions();
+  renderTagList();
+}
+
+async function deleteTag(id, name) {
+  if (!confirm(`确认删除标签「${name}」？\n\n删除后将无法恢复。`)) return;
+  
+  await fetch(`${API}/tag-options/${id}`, { method: 'DELETE' });
+  await fetchTagOptions();
+  renderTagList();
+}
+
+// ===== 初始化 =====
+(async function init() {
+  await fetchFilters();
+  await fetchForwarders();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,8 @@
+forwarders.db
+*.exe
+ngrok*
+frpc*
+cloudflared*
+__pycache__/
+*.pyc
+.env

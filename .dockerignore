@@ -1,0 +1,17 @@
+forwarders.db
+*.pyc
+__pycache__/
+*.zip
+*.exe
+frpc*
+ngrok*
+cloudflared*
+*.bat
+serveo_*
+node_modules/
+.git/
+.gitignore
+render.yaml
+render_deploy_guide.md
+railway_deploy_guide.md
+requirements_railway.txt
