@@ -14,7 +14,7 @@ CORS(app)
 DATABASE_URL = os.environ.get('DATABASE_URL')
 
 # 文件上传目录（Railway Volume 挂载路径）
-UPLOAD_FOLDER = '/app/static/uploads'
+UPLOAD_FOLDER = os.environ.get('UPLOAD_FOLDER', '/app/static/uploads')
 
 
 def get_conn():
